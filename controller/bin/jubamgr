@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+from jubamgr.controller import JubaManagerController
+
+if __name__ == '__main__':
+  JubaManagerController.main(sys.argv)

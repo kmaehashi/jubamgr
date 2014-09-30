@@ -1,0 +1,45 @@
+{
+ "global": {
+   "zookeeper": "localhost:2181",
+   "visor_options": {},
+   "server_options": {},
+   "proxy_options": {}
+ },
+
+ "visors": [
+   {
+     "id": "host01",
+     "host": "localhost",
+     "port": 9198,
+     "options": { }
+   }
+ ],
+
+ "clusters": [
+   {
+     "id": "test",
+     "type": "classifier",
+     "is_standalone": false
+   }
+ ],
+
+ "servers": [
+   {
+     "id": "server01",
+     "port": 9199,
+     "visor": "host01",
+     "cluster": "test",
+     "options": { }
+   }
+ ],
+
+ "proxies": [
+   {
+     "id": "proxy01",
+     "port": 9199,
+     "visor": "host01",
+     "type": "classifier",
+     "options": {}
+   }
+ ]
+}
