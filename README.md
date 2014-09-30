@@ -18,3 +18,7 @@ $ jubamgr start server server01
 $ jubamgr stop server server01
 ```
 
+License
+-----------------------
+
+LGPL 2.1
