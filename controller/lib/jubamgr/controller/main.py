@@ -33,10 +33,10 @@ class JubaManagerController():
       cls.stop(cfg, process_type, target_id)
     elif subcmd == 'save':
       target_id = args[1]
-      cls.save(cfg, target_id)
+      cls.local_model(cfg, target_id, 'save')
     elif subcmd == 'load':
       target_id = args[1]
-      cls.load(cfg, target_id)
+      cls.local_model(cfg, target_id, 'load')
     elif subcmd == 'status':
       # TODO implement
       print "Not implemented yet: {0}".format(subcmd)
@@ -64,7 +64,7 @@ class JubaManagerController():
     client.stop(1)
 
   @classmethod
-  def save(cls, cfg, target_id):
+  def local_model(cls, cfg, target_id, method):
     cluster = cfg.lookup('cluster', target_id)
     servers = []
 
@@ -83,7 +83,7 @@ class JubaManagerController():
     for s in servers:
       host = cfg.lookup('visor', s._visor)._host
       client = msgpackrpc.Client(msgpackrpc.Address(host, s._port), 30)
-      future = client.call_async('save', cluster._id, 'jubamgr',)
+      future = client.call_async(method, cluster._id, 'jubamgr',)
       w = JubatusClientCancelOnDown(client, future, zk, host, s._port, cluster._type, cluster._id)
       future.get()
     zk.stop()
