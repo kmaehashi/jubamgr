@@ -39,3 +39,12 @@ class JubaManagerConfig(object):
     elif process_type == 'cluster':
       return filter(lambda x: x.get_id() == query_id, self._clusters)[0]
 
+  def get_all(self, process_type):
+    if process_type == 'server':
+      return self._servers
+    elif process_type == 'proxy':
+      return self._proxies
+    elif process_type == 'visor':
+      return self._visors
+    elif process_type == 'cluster':
+      return self._clusters

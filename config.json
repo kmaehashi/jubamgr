@@ -9,7 +9,7 @@
  "visors": [
    {
      "id": "host01",
-     "host": "localhost",
+     "host": "192.168.122.211",
      "port": 9198,
      "options": { }
    }

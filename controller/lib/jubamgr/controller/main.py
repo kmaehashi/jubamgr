@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import threading
+
+import msgpackrpc
+
 from jubavisor.client import Jubavisor
 from jubavisor.types import ServerArgv
 
 from .config import JubaManagerConfig
+from .zk import get_zk, JubatusClientCancelOnDown
 
 class JubaManagerController():
   @classmethod
@@ -26,8 +31,16 @@ class JubaManagerController():
       process_type = args[1]
       target_id = args[2]
       cls.stop(cfg, process_type, target_id)
+    elif subcmd == 'save':
+      target_id = args[1]
+      cls.save(cfg, target_id)
+    elif subcmd == 'load':
+      target_id = args[1]
+      cls.load(cfg, target_id)
+    elif subcmd == 'status':
+      # TODO implement
+      print "Not implemented yet: {0}".format(subcmd)
     else:
-      # TODO support save,load,status subcmd
       print "Unknown subcmd: {0}".format(subcmd)
 
   @classmethod
@@ -50,4 +63,27 @@ class JubaManagerController():
     client = Jubavisor(visor._host, visor._port, 'juba' + cluster._type + '/' + cluster._id, 10)
     client.stop(1)
 
+  @classmethod
+  def save(cls, cfg, target_id):
+    cluster = cfg.lookup('cluster', target_id)
+    servers = []
 
+    if cluster is None:
+      server = cfg.lookup('server', target_id)
+      if server is None:
+        print "No such cluster or server matching the ID"
+        return
+      servers.append(server)
+      cluster = cfg.lookup('cluster', server._cluster)
+    else:
+      servers = filter(lambda x: x._cluster == cluster._id, cfg.get_all('server'))
+
+    threads = []
+    zk = get_zk()
+    for s in servers:
+      host = cfg.lookup('visor', s._visor)._host
+      client = msgpackrpc.Client(msgpackrpc.Address(host, s._port), 30)
+      future = client.call_async('save', cluster._id, 'jubamgr',)
+      w = JubatusClientCancelOnDown(client, future, zk, host, s._port, cluster._type, cluster._id)
+      future.get()
+    zk.stop()
