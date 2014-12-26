@@ -2,6 +2,8 @@ import logging
 import weakref
 import time
 
+import msgpackrpc.error
+
 import kazoo
 import kazoo.client
 import kazoo.exceptions
@@ -13,22 +15,18 @@ def get_zk():
   zk.start()
   return zk
 
-class JubatusClientCancelOnDown(object):
-  def __init__(self, client, future, zk, host, port, jubatus_type, name):
-    self._client_ref = weakref.ref(client)
-    self._future_ref = weakref.ref(future)
-    self._watcher = JubatusNodeWatcher(zk)
-    r = self._watcher.set_callback(host, port, jubatus_type, name, self._got_down)
-    if not r:
-      raise RuntimeError('failed to set callback; maybe the node does not exist?')
+class JubatusNodeDown(msgpackrpc.error.TransportError):
+  pass
 
-  def _got_down(self):
-    c = self._client_ref()
-    f = self._future_ref()
+def cancel_if_down(client, zk, host, port, jubatus_type, name):
+  client_ref = weakref.ref(client)
+  def _handle():
+    c = client_ref()
     if c is not None:
-      c.on_connect_failed('ZooKeeper detected that the node went down')
-    if f is not None:
-      f.set_error('node down')
+      c.on_connect_failed(JubatusNodeDown('ZooKeeper detected the node down'))
+  watcher = JubatusNodeWatcher(zk)
+  if not watcher.set_callback(host, port, jubatus_type, name, _handle):
+    raise RuntimeError('failed to set callback; maybe the node does not exist?')
 
 class JubatusNodeWatcher():
   def __init__(self, zk):

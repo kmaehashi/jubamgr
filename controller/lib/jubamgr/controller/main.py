@@ -8,7 +8,7 @@ from jubavisor.client import Jubavisor
 from jubavisor.types import ServerArgv
 
 from .config import JubaManagerConfig
-from .zk import get_zk, JubatusClientCancelOnDown
+from .zk import get_zk, cancel_if_down
 
 class JubaManagerController():
   @classmethod
@@ -83,7 +83,8 @@ class JubaManagerController():
     for s in servers:
       host = cfg.lookup('visor', s._visor)._host
       client = msgpackrpc.Client(msgpackrpc.Address(host, s._port), 30)
-      future = client.call_async(method, cluster._id, 'jubamgr',)
-      w = JubatusClientCancelOnDown(client, future, zk, host, s._port, cluster._type, cluster._id)
-      future.get()
+      cancel_if_down(client, zk, host, s._port, cluster._type, cluster._id)
+      client.call(method, cluster._id, 'jubamgr',)
+      #future = client.call_async(method, cluster._id, 'jubamgr',)
+      #future.get()
     zk.stop()
