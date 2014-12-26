@@ -85,6 +85,4 @@ class JubaManagerController():
       client = msgpackrpc.Client(msgpackrpc.Address(host, s._port), 0)
       cancel_if_down(client, zk, host, s._port, cluster._type, cluster._id)
       client.call(method, cluster._id, 'jubamgr',)
-      #future = client.call_async(method, cluster._id, 'jubamgr',)
-      #future.get()
     zk.stop()
